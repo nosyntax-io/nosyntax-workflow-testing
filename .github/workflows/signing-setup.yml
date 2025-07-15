@@ -1,0 +1,52 @@
+name: Signing Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      project-id:
+        description: 'Project ID'
+        required: true
+
+jobs:
+  setup:
+    name: Setup Signing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Environment Variables
+        run: |
+          PROJECT_ID=$(jq -r '.inputs["project-id"]' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$PROJECT_ID
+          echo PROJECT_ID=$PROJECT_ID >> $GITHUB_ENV
+
+      - name: Set Up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Generate Keystore
+        run: |
+          PASSWORD=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9')
+          echo "::add-mask::$PASSWORD"
+
+          keytool -genkey -v \
+            -keystore signing.keystore \
+            -alias $PROJECT_ID \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass $PASSWORD \
+            -keypass $PASSWORD \
+            -dname "O=$PROJECT_ID"
+
+          base64Keystore=$(base64 -w 0 signing.keystore)
+          echo "::add-mask::$base64Keystore"
+
+          echo "STORE_FILE=$base64Keystore" >> $GITHUB_ENV
+          echo "STORE_PASSWORD=$PASSWORD" >> $GITHUB_ENV
+          echo "KEY_ALIAS=$PROJECT_ID" >> $GITHUB_ENV
+          echo "KEY_PASSWORD=$PASSWORD" >> $GITHUB_ENV
