@@ -63,7 +63,7 @@ jobs:
 
       - name: Update Signing Settings
         run: |
-          response=$(curl -s -X PATCH "https://d489da048163.ngrok-free.app/api/projects/${{ env.PROJECT_ID }}/signing" \
+          response=$(curl -s -X POST "https://d489da048163.ngrok-free.app/api/projects/${{ env.PROJECT_ID }}/signing" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -H "Authorization: Bearer 1|GM8Cs8ftkyTSjAmxuTZRhc5UqXEYpbPoCMpPecxC9b7dc92d" \
             -d "store_file=signing.keystore" \
