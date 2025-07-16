@@ -69,4 +69,4 @@ jobs:
             -d "store_file=signing.keystore" \
             -d "store_password=${{ env.STORE_PASSWORD }}" \
             -d "key_alias=${{ env.KEY_ALIAS }}" \
-            -d "key_password=${{ env.KEY_PASSWORD }}" \
+            -d "key_password=${{ env.KEY_PASSWORD }}")
