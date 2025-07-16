@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       project-id:
-        description: 'Project ID'
+        description: "Project ID"
         required: true
 
 jobs:
@@ -25,8 +25,8 @@ jobs:
       - name: Set Up JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: "zulu"
+          java-version: "17"
 
       - name: Generate Keystore
         run: |
@@ -50,3 +50,23 @@ jobs:
           echo "STORE_PASSWORD=$PASSWORD" >> $GITHUB_ENV
           echo "KEY_ALIAS=$PROJECT_ID" >> $GITHUB_ENV
           echo "KEY_PASSWORD=$PASSWORD" >> $GITHUB_ENV
+
+      - name: Extract Certificate Fingerprints
+        run: |
+          storeOutput=$(keytool -list -v -keystore signing.keystore -alias $KEY_ALIAS -storepass $STORE_PASSWORD)
+
+          for type in SHA1 SHA256; do
+            fingerprint=$(echo "$storeOutput" | awk -v type="$type" '/'"$type"':/ {print $2}')
+            echo "::add-mask::$fingerprint"
+            echo "${type}_FINGERPRINT=$fingerprint" >> $GITHUB_ENV
+          done
+
+      - name: Update Signing Settings
+        run: |
+          response=$(curl -s -X POST "${{ secrets.BASE_URL }}/projects/${{ env.PROJECT_ID }}/signing" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -H "Authorization: Bearer ${{ secrets.API_TOKEN }}" \
+            -d "store_file=signing.keystore" \
+            -d "store_password=${{ env.STORE_PASSWORD }}" \
+            -d "key_alias=${{ env.KEY_ALIAS }}" \
+            -d "key_password=${{ env.KEY_PASSWORD }}" \
