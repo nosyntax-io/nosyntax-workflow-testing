@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       project-id:
-        description: "Project ID"
+        description: 'Project ID'
         required: true
 
 jobs:
@@ -16,17 +16,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set Up Environment Variables
+      - name: Setup Environment Variables
         run: |
           PROJECT_ID=$(jq -r '.inputs["project-id"]' $GITHUB_EVENT_PATH)
           echo ::add-mask::$PROJECT_ID
           echo PROJECT_ID=$PROJECT_ID >> $GITHUB_ENV
 
-      - name: Set Up JDK
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: "zulu"
-          java-version: "17"
+          distribution: 'zulu'
+          java-version: '17'
 
       - name: Generate Keystore
         run: |
@@ -61,12 +61,12 @@ jobs:
             echo "${type}_FINGERPRINT=$fingerprint" >> $GITHUB_ENV
           done
 
-      - name: Update Signing Settings
+      - name: Upload Keystore to S3
         run: |
-          response=$(curl -s -X POST "https://d489da048163.ngrok-free.app/api/projects/${{ env.PROJECT_ID }}/signing" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            -H "Authorization: Bearer 1|GM8Cs8ftkyTSjAmxuTZRhc5UqXEYpbPoCMpPecxC9b7dc92d" \
-            -d "store_file=signing.keystore" \
-            -d "store_password=${{ env.STORE_PASSWORD }}" \
-            -d "key_alias=${{ env.KEY_ALIAS }}" \
-            -d "key_password=${{ env.KEY_PASSWORD }}")
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ secrets.AWS_REGION }}
+
+          aws s3 cp signing.keystore \
+            s3://${{ secrets.AWS_BUCKET }}/projects/${{ env.PROJECT_ID }}/keystores/signing.keystore \
+            --server-side-encryption AES256
