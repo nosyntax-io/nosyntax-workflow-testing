@@ -28,6 +28,13 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Generate Keystore
         run: |
           PASSWORD=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9')
@@ -62,14 +69,8 @@ jobs:
           done
 
       - name: Upload Keystore to S3
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          aws s3 cp signing.keystore \
-            s3://${{ secrets.AWS_BUCKET }}/projects/${{ env.PROJECT_ID }}/keystores/signing.keystore \
-            --server-side-encryption AES256
+          aws s3 cp signing.keystore s3://${{ secrets.AWS_BUCKET }}/projects/${{ env.PROJECT_ID }}/keystores/signing.keystore
 
       - name: Update Signing Settings
         run: |
