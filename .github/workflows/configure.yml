@@ -62,6 +62,7 @@ jobs:
         run: |
           response=$(curl -s -X POST "https://75d015e8ee64.ngrok-free.app/api/projects/${{ env.PROJECT_ID }}/configure" \
             -H "Content-Type: application/x-www-form-urlencoded" \
+            -H "Accept: application/json" \
             -H "Authorization: Bearer 1|GM8Cs8ftkyTSjAmxuTZRhc5UqXEYpbPoCMpPecxC9b7dc92d" \
             -d "status=completed&job_id=${{ env.JOB_ID }}")
 
