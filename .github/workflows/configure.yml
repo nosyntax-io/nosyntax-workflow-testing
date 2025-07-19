@@ -10,6 +10,9 @@ on:
         description: "Project ID"
         required: true
 
+env:
+  AWS_REGION: us-east-1
+
 permissions:
   id-token: write
   contents: read
@@ -32,7 +35,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ARN }}
           role-session-name: GitHub_to_AWS_OIDC
-          aws-region: eu-north-1
+          aws-region: us-east-1
 
       - name: Create Sample Source Code
         run: |
